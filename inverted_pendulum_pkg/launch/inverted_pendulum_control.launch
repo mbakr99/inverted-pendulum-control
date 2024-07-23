@@ -1,0 +1,27 @@
+<launch>
+    <!--load the controller config file to rosparam server-->
+    <rosparam file="$(find inverted_pendulum_pkg)/config/inverted_pendulum_control.yaml" command="load" />
+
+    <!--launch gazebo empty_world-->
+    <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
+        <arg name="use_sim_time" value="true"/>
+        <arg name="paused" value="true" />
+    </include>
+
+    <!--spwan the inverted_pendulum robot-->
+    <include file="$(find inverted_pendulum_pkg)/launch/spawn.launch" />
+
+    <!--start the control_manager node-->
+    <node  name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+	output="screen" ns="/inverted_pendulum" args="joint_state_publisher joint_cart_controller" />
+
+    <!--start the robot_state_publisher (the documentation says that this help in tracking the tf and updating the robot model 
+    / However, I still don't know how this work exactly)-->
+
+     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+        <remap from="/joint_states" to="/inverted_pendulum/joint_states" /> <!--this instructs the robot_state_publisher to read from 
+        inverted_pendulum/joint_states instead of /joint_states. This is the result of using a ns in the yaml file and using 
+        the ns argument in the controller_spwaner node -->
+    </node>
+
+</launch>

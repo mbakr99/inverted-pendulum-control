@@ -1,0 +1,54 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="M_PI" value="3.1415926535897932384626" />
+
+
+    <xacro:property name="plate_mass" value="5.0"/>
+    <xacro:property name="plate_length" value="4"/>
+    <xacro:property name="plate_width" value="1"/>
+    <xacro:property name="plate_height" value="0.1" />
+    <xacro:property name="plate_x_offset" value="1"/>
+    <xacro:property name="plate_y_offset" value="1"/>
+    <xacro:property name="plate_z_offset" value="${plate_height/2}"/>
+
+
+    <xacro:property name="pendulum_mass" value="0.5" />
+    <xacro:property name="pendulum_length" value="0.05" />
+    <xacro:property name="pendulum_width" value="0.025" />
+    <xacro:property name="pendulum_height" value="0.5" />
+    
+
+    <xacro:property name="cart_mass" value="2.0" />
+    <xacro:property name="cart_length" value="0.2" />
+    <xacro:property name="cart_width" value="0.4" />
+    <xacro:property name="cart_height" value="0.025" />
+
+
+        <!--COMMENT: Defining a macro to define the inertai element-->  <!--*(l_y*l_y+l_z*l_z) *(l_x*l_x+l_z*l_z) *(l_x*l_x+l_y*l_y)-->
+        <xacro:macro name="box_inertia_element" params="l_x l_y l_z mass">
+        <inertia ixx="${mass/12 * (l_y*l_y + l_z*l_z)}" ixy="0" ixz="0" 
+                    iyy="${mass/12 * (l_x*l_x + l_z*l_z)}" iyz="0" izz="${mass/12 * (l_x*l_x + l_y*l_y)}" />
+    </xacro:macro>
+
+
+    <gazebo reference="link_ref">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="link_cart">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+    
+    <gazebo reference="link_pendulum">
+        <material>Gazebo/Gray</material>
+    </gazebo>
+    
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/inverted_pendulum</robotNamespace>
+        </plugin>
+    </gazebo>
+
+    
+
+</robot>

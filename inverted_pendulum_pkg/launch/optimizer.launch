@@ -1,0 +1,3 @@
+<launch>
+    <node name="optimizer_node" type="optimizer.py" pkg="inverted_pendulum_pkg" output="screen"/>
+</launch>

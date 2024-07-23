@@ -1,0 +1,9 @@
+<launch>
+<!-- Find my robot Description-->
+  <param name="robot_description" command="$(find xacro)/xacro  '$(find inverted_pendulum_pkg)/urdf/robot.xacro'"/>
+
+  <!-- Spawn The Robot using the robot_description param-->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" 
+        args="-urdf -param robot_description -model inverted_pendulum"/>
+
+</launch>

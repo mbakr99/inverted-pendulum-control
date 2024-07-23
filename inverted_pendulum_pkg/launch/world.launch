@@ -1,0 +1,10 @@
+<launch>
+    <arg name="use_sim_time" default="true" />
+    <arg name="paused" default="false" />
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="use_sim_time" value="$(arg use_sim_time)" />
+        <arg name="gui" default="true" />
+        <arg name="paused" value="$(arg paused)" />
+    </include>
+    
+</launch>

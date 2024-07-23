@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+    
+    <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="inverted_pendulum">
+
+       
+ 
+
+       <xacro:include filename="$(find inverted_pendulum_pkg)/urdf/robot_properties.xacro" />
+
+
+        <!--link definition-->
+         <link name="world" />
+    
+
+         <joint name="world_joint" type="fixed">
+            <origin xyz="${plate_x_offset} ${plate_y_offset} ${plate_z_offset}" rpy="0.0 0.0 0.0"/>
+            <parent link="world"/>
+            <child link="link_ref"/>
+        </joint>
+
+
+        <link name="link_ref"> 
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <mass value="1.0" />
+                <xacro:box_inertia_element l_x="${plate_length}" l_y="${plate_width}" l_z="${plate_height}" mass="1.0" />
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${plate_length} ${plate_width} ${plate_height}" />
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${plate_length} ${plate_width} ${plate_height}" />
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="joint_ref_cart" type="prismatic">
+            <origin xyz="0.0 0.0 ${plate_height/2}" rpy="0.0 0.0 0.0" />
+            <parent link="link_ref" />
+            <child link="link_cart" />
+            <axis xyz="1 0 0" />
+            <limit lower="-2" upper="2" effort="100" velocity="10" />
+        </joint>
+
+        <link name="link_cart">
+            <inertial>
+                <origin xyz="0 0 ${cart_height/2}" rpy="0 0 0" />
+                <mass value="1" />
+                <xacro:box_inertia_element l_x="${cart_length}" l_y="${cart_width}" l_z="${cart_height}" mass="${cart_mass}" />
+            </inertial>
+            <visual>
+                <origin xyz="0 0 ${cart_height/2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${cart_length} ${cart_width} ${cart_height}" />
+                </geometry>
+                <material name="Blue">
+                    <color rgba="0 0 1 0.4" />
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${cart_height/2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${cart_length} ${cart_width} ${cart_height}" />
+                </geometry>
+            </collision>
+        </link>
+
+          <joint name="joint_cart_pendulum" type="revolute">
+            <parent link="link_cart" />
+            <child link="link_pendulum" />
+            <origin xyz="0 0 ${cart_height}" rpy="0 0 0" />
+            <axis xyz="0 1 0" />
+            <limit lower="-${M_PI/2}" upper="${M_PI/2}" effort="100" velocity="10"/>
+        </joint>
+        
+        <link name="link_pendulum">
+            <inertial>
+                <origin xyz="0 0 ${pendulum_height/2}" rpy="0 0 0" /> <!--I am adding a small tilt of 5 deg-->
+                <mass value="0.2" />
+                <xacro:box_inertia_element l_x="${pendulum_length}" l_y="${pendulum_width}" l_z="${pendulum_height}" mass="${pendulum_mass}" />
+            </inertial>
+            <visual>
+                <origin xyz="0 0 ${pendulum_height/2}" rpy="0 0 0" /> 
+                <geometry>
+                    <box size="${pendulum_length} ${pendulum_width} ${pendulum_height}" />
+                </geometry>
+                <material name="Gray">
+                    <color rgba="0.33 0.33 0.33 0.4" />
+                </material>
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${pendulum_height/2}" rpy="0 0 0" /> 
+                <geometry>
+                    <box size="${pendulum_length} ${pendulum_width} ${pendulum_height}" />
+                </geometry>
+            </collision>
+        </link> 
+        
+        
+        
+        <transmission name="trans_cart">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="joint_ref_cart">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="actuator_cart">
+                <mechanicalReduction>1</mechanicalReduction>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </actuator>
+        </transmission>
+
+         <transmission name="trans_pendulum">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="joint_cart_pendulum">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="dummy_actuator_pendulum">
+                <mechanicalReduction>1</mechanicalReduction>
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </actuator>
+        </transmission>
+
+
+       
+
+
+       
+
+
+
+
+    </robot>
