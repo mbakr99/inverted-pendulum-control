@@ -117,6 +117,10 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 | robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package to for better code organization |
 | robot_properties.xacro | Contains definitions of gazebo materials, xacro macros, and other properties. This gets included in robot.xacro using `xacro:include` |
 
-
+#### 7. config
+| file | purpose |
+|-----------------|-----------------|
+| inverted_pendulum_control.yaml |  Sets the joint|
+| robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package to for better code organization |
 
 
