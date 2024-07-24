@@ -125,4 +125,8 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 **Note**: joint_cart_controller is of type `effort_controllers/JointEffortController`. For more details on this, refer to [ros_control](https://wiki.ros.org/ros_control) and this [tutorial](https://classic.gazebosim.org/tutorials?tut=ros_control). 
 
+#### 8. CMakeLists.txt
 
+#### 9. package.xml
+
+## Using the package 
