@@ -69,3 +69,29 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 - **Launch file**: `inverted_pendulum_pkg/launch/optimizer.launch`
 
 ![Image](inverted_pendulum_pkg/images/nodes_flow.svg)
+
+### Directories breakdown
+
+#### 1. src directory
+
+| file | purpose |
+|-----------------|-----------------|
+| update_pend_pose.cpp     | source code of  `update_pend_pose_data` node    |
+| control_cart_pendulum.cpp    | source code of  `controller_node` node     |
+| compute_objective.cpp     |  source code of  `compute_objective_node` node    |
+
+#### 2. scripts
+
+| file | purpose |
+|-----------------|-----------------|
+| optimizer.py     | source code of  `optimizer_node` node    |
+
+#### 3. launch
+
+| file | purpose |
+|-----------------|-----------------|
+| update_pend_pose.cpp     | source code of  `update_pend_pose_data` node    |
+| control_cart_pendulum.cpp    | source code of  `controller_node` node     |
+| compute_objective.cpp     |  source code of  `compute_objective_node` node    |
+
+
