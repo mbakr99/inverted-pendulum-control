@@ -113,6 +113,10 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 6. urdf
 | file | purpose |
 |-----------------|-----------------|
-| robot.xacro | Robot description using urdf  type|
-| UpdatePIDParams.srv | Definition of the `UpdatePIDParams` type |
+| robot.urdf |  Robot description using urdf markup|
+| robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package to for better code organization |
+| robot_properties.xacro | Contains definitions of gazebo materials, xacro macros, and other properties. This gets included in robot.xacro using `xacro:include` |
+
+
+
 
