@@ -64,9 +64,8 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 4. `optimizer` Node
 - **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization.
 - **Functionality**:
-  - Contains a client to `/inverted_pendulum/compute_objective` for sending  
-  - Maintains a population of 60 individuals. Each individual fitness is evaluated by calling 
-  - Evaluates the fitness of each individual based on the tracking error returned by the `compute_objective_service` using the controller gains contained in the individual.
+  - Contains a client to `/inverted_pendulum/compute_objective` for evaluating the population individuals.   
+  - Updates the population for a specific number of generation (the optimization parameters can only be changed by modifying the script )
 
 
 ### ROS (Controller + Optimization):
