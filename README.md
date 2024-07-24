@@ -61,7 +61,7 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
   - Returns the tracking error at the end of the simulation, serving as an objective function that assesses the quality of the controller.
 - **Launch file**: `inverted_pendulum_pkg/launch/compute_objective_launch.launch`
 
-#### 4. `optimizer` Node
+#### 4. `optimizer_node` Node
 - **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization.
 - **Functionality**:
   - Contains a client to `/inverted_pendulum/compute_objective` for evaluating the population individuals.   
