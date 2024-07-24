@@ -27,5 +27,10 @@ A Genetic Algorithm (GA) is an evolutionary heuristic optimization technique tha
 Mathworks provides a brief and good [explanation](https://www.mathworks.com/help/gads/what-is-the-genetic-algorithm.html) on GA.
 
 ## Implmentation using ROS + Gazebo:
+The implementation involves modeling an inverted pendulum in Gazebo, while a controller and an optimizer run on ROS. Gazebo and ROS communicate seamlessly: ROS sends control actions to Gazebo, which updates the state of the inverted pendulum and sends the updated state back to ROS. This interaction is illustrated in the following figure:
 
-![Figure]()
+
+![Figure](https://raw.githubusercontent.com/mbakr99/inverted-pendulum-control/5ae47a8c8ccd7bb28433a6fc85852af1aa9dce37/inverted_pendulum_pkg/images/inverted_pend_flow.svg)
+
+### ROS (Controller + Optimization):
+Four nodes run on ROS. A controller node  
