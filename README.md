@@ -68,4 +68,4 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
   - Updates the population for a specific number of generations (the optimization parameters can only be changed by modifying the script `inverted_pendulum_pkg/scripts/optimizer.py`. This is going to be modified in the future. )
 - **Launch file**: `inverted_pendulum_pkg/launch/optimizer.launch`
 
-
+![Image](inverted_pendulum_pkg/images/nodes_flow.svg)
