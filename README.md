@@ -113,6 +113,6 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 6. urdf
 | file | purpose |
 |-----------------|-----------------|
-| CandidateSolution.srv | Definition of the `CandidateSolution` type|
+| robot.xacro | Robot description using urdf  type|
 | UpdatePIDParams.srv | Definition of the `UpdatePIDParams` type |
 
