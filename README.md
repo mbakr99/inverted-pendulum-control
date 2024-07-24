@@ -32,5 +32,42 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 ![Figure](https://raw.githubusercontent.com/mbakr99/inverted-pendulum-control/5ae47a8c8ccd7bb28433a6fc85852af1aa9dce37/inverted_pendulum_pkg/images/inverted_pend_flow.svg)
 
+
+
+
+### Nodes Overview
+
+#### 1. `update_pend_pose_data` Node
+- **Purpose**: Publishes the pendulum orientation and the cart position.
+- **Functionality**:
+  - Collects relevant pendulum pose data by listening to the `/gazebo/link_states` topic and calling the `/gazebo/get_link_state` service.
+  - Publishes the data using a custom message of type `ControlPoseData` to the `/inverted_pendulum/control_pose_data` topic.
+- **Benefit**: Facilitates the exchange of relevant inverted pendulum data between Gazebo and ROS.
+
+#### 2. `controller_node` Node
+- **Purpose**: Computes the control action based on the current state of the inverted pendulum.
+- **Functionality**:
+  - Provides a service `/inverted_pendulum/set_pid_gains` for changing PID gains. The service uses a custom service of type `UpdatePIDParams.
+  - Computes the control action. The node subscribes to the `/inverted_pendulum/control_pose_data`topic to obtain the inverted pendulum state.
+  - Sends the control action to Gazebo by publishing to `/inverted_pendulum/joint_cart_controller/command` provided by `gazebo_ros_control` plugin.  
+    
+
+#### 3. `compute_objective_node` Node
+- **Purpose**: Evaluate a set of controller gains.
+- **Functionality**:
+  - Provides a service `/inverted_pendulum/compute_objective' for evaluating a potential set of controller gains. The service uses a custom service of type `CandidateSolution.
+  - Contains a client to the `/in
+  - Returns the tracking error at the end of the simulation, serving as an objective function that assesses the quality of the controller.
+  - 
+  - The service, when called with a candidate solution, updates the controller gains, runs the simulation, and responds with the tracking error.
+  - The service is called repeatedly by the `optimizer` node.
+
+#### 4. `optimizer` Node
+- **Purpose**: Implements the learning process through Genetic Algorithm (GA) optimization.
+- **Functionality**:
+  - Maintains a population of 60 individuals.
+  - Evaluates the fitness of each individual based on the tracking error returned by the `compute_objective_service` using the controller gains contained in the individual.
+
+
 ### ROS (Controller + Optimization):
 Four nodes run on ROS. A controller node  
