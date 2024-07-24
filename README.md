@@ -120,7 +120,9 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 7. config
 | file | purpose |
 |-----------------|-----------------|
-| inverted_pendulum_control.yaml |  Sets the joint|
-| robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package to for better code organization |
+| inverted_pendulum_control.yaml |  Sets gazebo_ros_control interface through setting the joint_state_publisher and joint_cart_controller |
+| my_config.rviz | Stores an Rviz configuration data. the purpose is to avoid the need for adding a robot and a tf objects manually whenever Rviz is launched |
+
+**Note**: joint_cart_controller is of type `effort_controllers/JointEffortController`. For more details on this, refer to [ros_control](https://wiki.ros.org/ros_control) and this [tutorial](https://classic.gazebosim.org/tutorials?tut=ros_control). 
 
 
