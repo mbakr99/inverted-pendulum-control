@@ -38,11 +38,11 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 ### Nodes Overview
 
 #### 1. `update_pend_pose_data` Node
-- **Purpose**: Publishes the pendulum orientation and the cart position.
+- **Purpose**: Publishes the pendulum orientation and the cart position, which facilitates the exchange of relevant inverted pendulum data between Gazebo and ROS.
 - **Functionality**:
   - Collects relevant pendulum pose data by listening to the `/gazebo/link_states` topic and calling the `/gazebo/get_link_state` service.
   - Publishes the data using a custom message of type `ControlPoseData` to the `/inverted_pendulum/control_pose_data` topic.
-- **Benefit**: Facilitates the exchange of relevant inverted pendulum data between Gazebo and ROS.
+- **Launch file**: .
 
 #### 2. `controller_node` Node
 - **Purpose**: Computes the control action based on the current state of the inverted pendulum.
@@ -50,7 +50,7 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
   - Provides a service `/inverted_pendulum/set_pid_gains` for changing PID gains. The service uses a custom service of type `UpdatePIDParams` that stores a set of controller gains.
   - Computes the control action. The node subscribes to the `/inverted_pendulum/control_pose_data`topic to obtain the inverted pendulum state.
   - Sends the control action to Gazebo by publishing to `/inverted_pendulum/joint_cart_controller/command` provided by `gazebo_ros_control` plugin.  
-    
+- **Launch file**:
 
 #### 3. `compute_objective_node` Node
 - **Purpose**: Evaluate a set of controller gains.
@@ -59,14 +59,14 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
   - Contains a client to the `/inverted_pendulum/set_pid_gains`. The client parses the data stored in `CandidateSolution` into a `UpdatePIDParams` and sends it to the service server where the controller gains are updated.
   - Runs a simulation in Gazebo for a specific amount of time (this can be set when launching the node using roslaunch by passing setting the argument `sim_time`). 
   - Returns the tracking error at the end of the simulation, serving as an objective function that assesses the quality of the controller.
-    
+- **Launch file**:
 
 #### 4. `optimizer` Node
 - **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization.
 - **Functionality**:
   - Contains a client to `/inverted_pendulum/compute_objective` for evaluating the population individuals.   
-  - Updates the population for a specific number of generation (the optimization parameters can only be changed by modifying the script )
-
+  - Updates the population for a specific number of generations (the optimization parameters can only be changed by modifying the script `inverted_pendulum_pkg/scripts/optimizer.py`. This is going to be modified in the future. )
+- **Launch file**:
 
 ### ROS (Controller + Optimization):
 Four nodes run on ROS. A controller node  
