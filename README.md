@@ -27,3 +27,5 @@ A Genetic Algorithm (GA) is an evolutionary heuristic optimization technique tha
 Mathworks provides a brief and good [explanation](https://www.mathworks.com/help/gads/what-is-the-genetic-algorithm.html) on GA.
 
 ## Implmentation using ROS + Gazebo:
+
+![Figure]()
