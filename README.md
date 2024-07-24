@@ -90,8 +90,14 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 | file | purpose |
 |-----------------|-----------------|
-| update_pend_pose.cpp     | source code of  `update_pend_pose_data` node    |
-| control_cart_pendulum.cpp    | source code of  `controller_node` node     |
-| compute_objective.cpp     |  source code of  `compute_objective_node` node    |
+| rviz.launch    | visualizes the inverted pendulum in Rviz   |
+| world.launch    | launches empty world in Gazebo. Other launch files use it     |
+| spawn.launch     |  spawns the inverted pendulum model. Other launch files use it     |
+| inverted_pendulum_control.launch | launches empty world, spawns the inverted pendulum, and starts the controller_manager (part of gaebo_ros_control)  |
+| update_pend_pose.launch | launches the `update_pend_pose_data` node |
+| controller.launch |  launches the `controller_node` node |
+| compute_objective_launch.launch| launches the `compute_objective_node` node |
+| optimizer.launch | launches the  `optimizer_node`` node |
+
 
 
