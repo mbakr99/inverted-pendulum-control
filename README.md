@@ -99,5 +99,20 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 | compute_objective_launch.launch| launches the `compute_objective_node` node |
 | optimizer.launch | launches the  `optimizer_node`` node |
 
+#### 4. msg
+| file | purpose |
+|-----------------|-----------------|
+| ControlPoseData.msg | Definition of the `ControlPoseData` type|
 
+#### 5. srv
+| file | purpose |
+|-----------------|-----------------|
+| CandidateSolution.srv | Definition of the `CandidateSolution` type|
+| UpdatePIDParams.srv | Definition of the `UpdatePIDParams` type |
+
+#### 6. urdf
+| file | purpose |
+|-----------------|-----------------|
+| CandidateSolution.srv | Definition of the `CandidateSolution` type|
+| UpdatePIDParams.srv | Definition of the `UpdatePIDParams` type |
 
