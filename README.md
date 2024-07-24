@@ -47,7 +47,7 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 2. `controller_node` Node
 - **Purpose**: Computes the control action based on the current state of the inverted pendulum.
 - **Functionality**:
-  - Provides a service `/inverted_pendulum/set_pid_gains` for changing PID gains. The service uses a custom service of type `UpdatePIDParams.
+  - Provides a service `/inverted_pendulum/set_pid_gains` for changing PID gains. The service uses a custom service of type `UpdatePIDParams` that stores a set of controller gains.
   - Computes the control action. The node subscribes to the `/inverted_pendulum/control_pose_data`topic to obtain the inverted pendulum state.
   - Sends the control action to Gazebo by publishing to `/inverted_pendulum/joint_cart_controller/command` provided by `gazebo_ros_control` plugin.  
     
@@ -55,17 +55,17 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 #### 3. `compute_objective_node` Node
 - **Purpose**: Evaluate a set of controller gains.
 - **Functionality**:
-  - Provides a service `/inverted_pendulum/compute_objective' for evaluating a potential set of controller gains. The service uses a custom service of type `CandidateSolution.
-  - Contains a client to the `/in
+  - Provides a service `/inverted_pendulum/compute_objective` for evaluating a potential set of controller gains. The service uses a custom service of type `CandidateSolution`. The service returns the pendulum and cart tracking errors.  
+  - Contains a client to the `/inverted_pendulum/set_pid_gains`. The client parses the data stored in `CandidateSolution` into a `UpdatePIDParams` and sends it to the service server where the controller gains are updated.
+  - Runs a simulation in Gazebo for a specific amount of time (this can be set when launching the node using roslaunch by passing setting the argument `sim_time`). 
   - Returns the tracking error at the end of the simulation, serving as an objective function that assesses the quality of the controller.
-  - 
-  - The service, when called with a candidate solution, updates the controller gains, runs the simulation, and responds with the tracking error.
-  - The service is called repeatedly by the `optimizer` node.
+    
 
 #### 4. `optimizer` Node
-- **Purpose**: Implements the learning process through Genetic Algorithm (GA) optimization.
+- **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization.
 - **Functionality**:
-  - Maintains a population of 60 individuals.
+  - Contains a client to `/inverted_pendulum/compute_objective` for sending  
+  - Maintains a population of 60 individuals. Each individual fitness is evaluated by calling 
   - Evaluates the fitness of each individual based on the tracking error returned by the `compute_objective_service` using the controller gains contained in the individual.
 
 
