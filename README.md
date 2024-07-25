@@ -176,5 +176,5 @@ target_link_libraries(update_pose_data
 )
 ```
 #### 9. package.xml
-Provides meta-information about the package. It also provides high-level dependency management. 
+Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml file]() for more details.
 ## Using the package 
