@@ -212,10 +212,17 @@ This command starts Gazebo, spawns the model, and takes care of applying the con
 roslaunch inverted_pendulum_pkg controller.launch
 ```
 
-To ensure the node is up and running, you should see the `/inverted_pendulum/set_pid_gains` service when executing `rosservice list` in a shell. The controller is constantly computing control actions. At first, however, the inverted pendulum pose data should be available. Thus, to see the controller in action, the `update_pend_pose_data` node has to be running first. To do that execute the following command
+To ensure the node is up and running, you should see the `/inverted_pendulum/set_pid_gains` service when executing `rosservice list` in a shell. The controller is constantly computing control actions. At first, however, the inverted pendulum pose data should be available. Thus, to see the controller in action, the `update_pend_pose_data` node has to be running first. To do that, execute the following command
 ```
 roslaunch inverted_pendulum_pkg update_pend_pose.launch
 ```
+Now unpause the simulation by executing `rosservice call /gazebo/unpause`. You should see the pendulum falling. Now, the pendulum pose data can be obtained by executing `rostopic echo /inverted_pendulum/control_pose_data`.
+By default, the controller gains are set to zeros. However, this can be changed by calling the `/inverted_pendulum/set_pid_gains` service provided by the `controller_node` as follows
+```
+rosservice call /inverted_pendulum/set_pid_gains <TAB><TAB>
+```
+fill in the gains and execute the command. You should see the pendulum starting to move.
+
 
 
  
