@@ -178,3 +178,14 @@ target_link_libraries(update_pose_data
 #### 9. package.xml
 Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml](inverted_pendulum_pkg/package.xml) file for more details.
 ## Using the package 
+##### Building the package 
+Add the package to the src directory of your workspace. Then in a shell execute the following:
+```
+roscd; cd ..
+catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
+```
+##### Visualizing the inverted pendulum in Rviz
+
+```
+roslaunch inverted_pendulum_pkg rviz.launch
+```
