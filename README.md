@@ -179,7 +179,7 @@ target_link_libraries(update_pose_data
 Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml](inverted_pendulum_pkg/package.xml) file for more details.
 ## Using the package 
 ##### Building the package 
-Add the package to the src directory of your workspace. Then in a shell execute the following:
+Add the package to the src directory of your workspace. Then, in a shell execute the following:
 ```
 roscd; cd ..
 catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
@@ -189,5 +189,15 @@ catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
 ```
-The following should appear
-![Image](
+The following should appear:
+![Image](inverted_pendulum_pkg/images/rviz_ref_set.png)
+
+**Note**: At first, the model colors will not be set until a _Fixed frame_ link is set by going to the _Global options_ under the _Display_ panel.
+This command also launches the `joint_state_publisher_gui` which enables the use to simulate joint movement.
+
+##### Starting Gazebo, spawning the model
+```
+roslaunch inverted_pendulum_pkg rviz.launch
+```
+
+The following command starts Gazebo, spawns the model, and takes care of applying the control actions to the model
