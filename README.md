@@ -127,6 +127,36 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 #### 8. CMakeLists.txt
 
+ This file defines the build process. It manages dependencies and enables building projects across different platforms. A few parts of the CMakeLists.txt file are highlighted and explained below:
+##### bring dependencies into the build
+```
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  xacro
+  message_generation
+  control_toolbox
+)
+
+```
+##### generating custom messages and services
+```
+add_message_files(
+  FILES
+  ControlPoseData.msg
+)
+add_service_files(
+  FILES
+  UpdatePIDParams.srv
+  CandidateSolution.srv
+)
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+```
+      
 #### 9. package.xml
 
 ## Using the package 
