@@ -71,7 +71,7 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 ![Image](inverted_pendulum_pkg/images/nodes_flow.svg)
 
 ### Directories breakdown
-
+**Note**: This section provides a breakdown of the project subdirectories and files. It might be skipped if the reader is not interested in the specifics of the project.
 #### 1. src directory
 
 | file | purpose |
