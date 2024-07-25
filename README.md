@@ -189,3 +189,4 @@ catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
 ```
+The following should appear
