@@ -156,7 +156,25 @@ generate_messages(
 )
 
 ```
-      
-#### 9. package.xml
+##### generating executables from cpp source files
+```
+add_executable(objective_server src/compute_objective.cpp)
+add_executable(controller src/control_cart_pendulum.cpp)
+add_executable(update_pose_data src/update_pend_pose.cpp)
 
+```
+##### specifying libraries used for linking the targets (executables) to their dependencies
+```
+target_link_libraries(objective_server
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(controller
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(update_pose_data
+  ${catkin_LIBRARIES}
+)
+```
+#### 9. package.xml
+Provides meta-information about the package. It also provides high-level dependency management. 
 ## Using the package 
