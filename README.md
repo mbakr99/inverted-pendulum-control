@@ -232,6 +232,6 @@ In another shell
 ```
 roslaunch inverted_pendulum_pkg optimizer.launch
 ```
-
-
+At first, the controller struggles to keep the pendulum in the desired upright position while maintaining the cart at the center of the plate.  
+![first_gen](inverted_pendulum_pkg/images/first_generations.gif)
  
