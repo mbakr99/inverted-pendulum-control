@@ -178,13 +178,13 @@ target_link_libraries(update_pose_data
 #### 9. package.xml
 Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml](inverted_pendulum_pkg/package.xml) file for more details.
 ## Using the package 
-##### Building the package 
+#### Building the package 
 Add the package to the src directory of your workspace. Then, in a shell, execute the following:
 ```
 roscd; cd ..
 catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
 ```
-##### Visualizing the inverted pendulum in Rviz
+#### Visualizing the inverted pendulum in Rviz
 
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
@@ -195,7 +195,7 @@ The following should appear:
 **Note**: At first, the model colors will not be set until a _Fixed frame_ link is set by going to the _Global options_ under the _Display_ panel.
 This command also launches the `joint_state_publisher_gui`, enabling the user to simulate joint movement.
 
-##### Starting Gazebo, spawning the model
+#### Starting Gazebo, spawning the model
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
 
@@ -207,7 +207,7 @@ This command starts Gazebo, spawns the model, and takes care of applying the con
 
 **Note**: The simulation is paused by default. 
 
-##### Launching `update_pend_pose_data` and `controller_node` nodes
+#### Launching the `update_pend_pose_data` and `controller_node` nodes
 ```
 roslaunch inverted_pendulum_pkg controller.launch
 ```
@@ -223,6 +223,15 @@ rosservice call /inverted_pendulum/set_pid_gains <TAB><TAB>
 ```
 fill in the gains and execute the command. You should see the pendulum starting to move.
 
+#### Launching the `compute_pbjective_node` and `optimizer_node` nodes
+```
+roslaunch inverted_pendulum_pkg compute_objective_launch.launch sim_time:=3
+```
+In another shell
+
+```
+roslaunch inverted_pendulum_pkg optimizer.launch
+```
 
 
  
