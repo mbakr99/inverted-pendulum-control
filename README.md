@@ -179,7 +179,7 @@ target_link_libraries(update_pose_data
 Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml](inverted_pendulum_pkg/package.xml) file for more details.
 ## Using the package 
 ##### Building the package 
-Add the package to the src directory of your workspace. Then, in a shell execute the following:
+Add the package to the src directory of your workspace. Then, in a shell, execute the following:
 ```
 roscd; cd ..
 catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
@@ -193,11 +193,29 @@ The following should appear:
 ![Image](inverted_pendulum_pkg/images/rviz_ref_set.png)
 
 **Note**: At first, the model colors will not be set until a _Fixed frame_ link is set by going to the _Global options_ under the _Display_ panel.
-This command also launches the `joint_state_publisher_gui` which enables the use to simulate joint movement.
+This command also launches the `joint_state_publisher_gui`, enabling the user to simulate joint movement.
 
 ##### Starting Gazebo, spawning the model
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
+
+```
+The following should appear:
+![Image](inverted_pendulum_pkg/images/model_gazebo.png)
+
+This command starts Gazebo, spawns the model, and takes care of applying the control actions to the model. Due to using `gazebo_ros_control` [plugin](https://classic.gazebosim.org/tutorials?tut=ros_gzplugins) and launching the controller manager, the topic `/inverted_pendulum/joint_cart_controller/command` should appear after using `rostopic list`.
+
+**Note**: The simulation is paused by default. 
+
+##### Launching `update_pend_pose_data` and `controller_node` nodes
+```
+roslaunch inverted_pendulum_pkg controller.launch
 ```
 
-The following command starts Gazebo, spawns the model, and takes care of applying the control actions to the model
+To ensure the node is up and running, you should see the `/inverted_pendulum/set_pid_gains` service when executing `rosservice list` in a shell. The controller is constantly computing control actions. At first, however, the inverted pendulum pose data should be available. Thus, to see the controller in action, the `update_pend_pose_data` node has to be running first. To do that execute the following command
+```
+roslaunch inverted_pendulum_pkg update_pend_pose.launch
+```
+
+
+ 
