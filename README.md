@@ -243,8 +243,12 @@ At first, the controller struggles to keep the pendulum in the desired upright p
 - The importance of logging in debugging your code. I can't emphaisze how important this is! By comparing the expected behavior (through login) with what you are actually getting you can determine or narrow down the possible sources of the :bug:.
 - Using different logging levels to be able to filter different messages using `rqt_console`.
 - Save simulation time ⏱️ when possible! Don't think, "Oh, this costs almost no time; making it more efficient will not matter". It, generally, does. I saved a lot of time by doing the following:
-  + Setting an initial tilt in the pendulum so that it falls more quickly (saved around 3-4 seconds)
-  + I avoided pausing the simulation at the end of each run. This meant I didn't have to unpause the simulation at the beginning of the next iteration (saved 2-4 seconds)
-- It is very important to know the rate at which the callback functions are being executed. In my case, for example, one of the callback functions was used to accumulate the tracking error. At the beginning, I did not set a desired rate to run the callback function, which resulted in inconsistent tracking error results (two identical simulation runs will result in different tracking errors)
+  + Setting an initial tilt in the pendulum so that it falls more quickly (saved around 3-4 seconds),
+  + I avoided pausing the simulation at the end of each run. This meant I didn't have to unpause the simulation at the beginning of the next iteration (saved 2-4 seconds).
+- It is very important to know the rate at which the callback functions are being executed. In my case, for example, one of the callback functions was used to accumulate the tracking error. At the beginning, I did not set a desired rate to run the callback function, which resulted in inconsistent tracking error results (two identical simulation runs will result in different tracking errors).
 - Trust and develop your engineering intuition. I mentioned that I wanted to set a tilt in the pendulum position to make it fall faster. At first, I used `gazebo/set_link_state` service to set the pendulum at 5 degrees. I noticed that there was a jerk in the pendulum motion at the beginning, and I felt that something was wrong. However, I convinced myself that it might be that the controller gains were off at first. I later found out that setting the link states might cause an unexpected behavior by the solver. I solved that by applying a small torque instead.
+- You should know that the fixed link that you use as a reference for tf to work properly should be named' world'. I spent a lot of time reading my urdf file over and over again to find the answer [here](https://answers.ros.org/question/393006/urdf-link-not-properly-fixed-to-world/).
+- Use the experience of others, do not reinvent the wheel. I am not saying copy someones work. However, a good deal of the problems and bugs that you will face have been experienced by someone else. I noticed that this [work](https://youtu.be/dLnKvFEnSBw?si=Jh9mYsgKbguqkwBv) experienced the same `joint_state_publisher` I mentioned above.
+  
+   
       
