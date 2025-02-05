@@ -74,17 +74,20 @@ protected:
 
 
 public:
-    RunSim(int sim_time): accum_track_error_pend_(0.0),accum_track_error_cart_(0.0), last_time_(ros::Time::now()),accum_error_time_span_(0.1){
-        
-
-        
+    RunSim(int sim_time): accum_track_error_pend_(0.0), 
+                          accum_track_error_cart_(0.0), 
+                          last_time_(ros::Time::now()),
+                          accum_error_time_span_(0.1)
+                          {
 
         joint_state_sub_ = nh_.subscribe("/inverted_pendulum/control_pose_data",10,&RunSim::joint_state_CB,this); //TODO: I should add some logic to 
         //ensure that the topic exist 
         //controller_cmd_sub_ = nh_.subscribe("/inverted_pendulum/joint_cart_controller/command",10,);
 
         //Initialize the service server 
-        const boost::function<bool(inverted_pendulum_pkg::CandidateSolutionRequest&,inverted_pendulum_pkg::CandidateSolutionResponse&)> f_ = boost::bind(&RunSim::srvCB,this,_1,_2);
+        const boost::function<bool(
+                inverted_pendulum_pkg::CandidateSolutionRequest&,inverted_pendulum_pkg::CandidateSolutionResponse&)
+                             > f_ = boost::bind(&RunSim::srvCB,this,_1,_2);
 
         server_ = nh_.advertiseService("inverted_pendulum/compute_objective",f_);
         gazebo_reset_client_ = nh_.serviceClient<std_srvs::Empty>("/gazebo/reset_simulation",false);
@@ -155,7 +158,9 @@ protected:
     
     }
 
-    bool srvCB(inverted_pendulum_pkg::CandidateSolutionRequest& req, inverted_pendulum_pkg::CandidateSolutionResponse& resp ){
+    bool srvCB(inverted_pendulum_pkg::CandidateSolutionRequest& req,
+               inverted_pendulum_pkg::CandidateSolutionResponse& resp)
+               {
     
         bool success_flag = true; //will be used to indicate the success of the srv
         std::vector<double> pend_cont_gains, cart_cont_gains;
@@ -163,7 +168,9 @@ protected:
         pend_cont_gains = req.pendulum_controller_gains;
         cart_cont_gains = req.cart_controller_gains;
 
-        ROS_INFO("The recieved pid gains are: (pendulum): %f, %f, %f | (cart):, %f, %f, %f",pend_cont_gains[0],pend_cont_gains[1],pend_cont_gains[2],cart_cont_gains[0],cart_cont_gains[1],cart_cont_gains[2]);
+        ROS_INFO("The recieved pid gains are: (pendulum): %f, %f, %f | (cart):, %f, %f, %f"
+                ,pend_cont_gains[0],pend_cont_gains[1],pend_cont_gains[2],
+                cart_cont_gains[0],cart_cont_gains[1],cart_cont_gains[2]);
         set_update_pid_msg(pend_cont_gains ,cart_cont_gains);
         
         //send the reconfig service to the server
@@ -214,7 +221,7 @@ protected:
 
        
 
-        if (success_flag){  //if the simulation has been reset and the PID has been updated, run the simulation 
+        if (success_flag){  //FIXME: I believe this is poitless as the flag is always true //if the simulation has been reset and the PID has been updated, run the simulation 
            
             ROS_INFO("Simulation will now run for %f seconds.", simulation_time_.toSec());
             ros::Time sim_start_time = ros::Time::now();
@@ -278,8 +285,11 @@ protected:
 
         if ((current_time_ - last_time_) > accum_error_time_span_) {
             ROS_INFO("Accumalating error...");
-            accum_track_error_pend_ += std::abs(desired_pend_pos_ - pend_pos);
-            accum_track_error_cart_ += std::abs(desired_cart_pos_ - cart_pos); 
+            accum_track_error_pend_ += std::abs(static_cast<double>(desired_pend_pos_) - pend_pos) * 
+                                        static_cast<double>(current_time_.toNSec()); // I made the cost grow with time
+
+            accum_track_error_cart_ += std::abs(static_cast<double>(desired_cart_pos_) - cart_pos) * 
+                                        static_cast<double>(current_time_.toNSec());
 
             last_time_ = current_time_;
         }

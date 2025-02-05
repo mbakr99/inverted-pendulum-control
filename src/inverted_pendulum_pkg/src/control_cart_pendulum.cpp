@@ -38,13 +38,25 @@ protected:
 
     std_msgs::Float64 controller_cmd_msg_;
 
-    ros::Time last_time_;
+    ros::Time last_command_print_time_;
+    ros::Time last_command_update_time_;
+    ros::Duration command_print_rate_; 
+    ros::Duration command_update_rate_;
 
 
 
 public:
 
-    InvPenController(double pc,double ic,double dc,double pp,double ip,double dp):pend_pos_controller_(),cart_pos_controller_(),last_time_(ros::Time::now()){
+    InvPenController(double pc,double ic,double dc,
+                     double pp,double ip,double dp,
+                     double update_rate) :
+                     pend_pos_controller_(),
+                     cart_pos_controller_(),
+                     last_command_print_time_(ros::Time::now()),
+                     last_command_update_time_(ros::Time::now()),
+                     command_print_rate_(ros::Duration(0.2)),
+                     command_update_rate_(update_rate)
+                     {
     
     
         //setpoint_sub_ = nh_.subscribe("inverted_pendulum/setpoint",1,&InvPenController::setpointCB,this);
@@ -119,16 +131,31 @@ protected: //all of the class callbacks
         double error_cart = set_point_cart_ - msg->cart_posx;
 
         ros::Time current_time = ros::Time::now();
-        ros::Duration dt = current_time - last_time_;
+        
        
 
         //I might want to add a line here to control the update rate (use if condition with )
+        ros::Duration dt = current_time - last_command_print_time_;
         
-        controller_cmd_ = compute_command(error_cart, error_pend, dt);
-        controller_cmd_msg_.data = controller_cmd_;
-        last_time_ = ros::Time::now();
-        ROS_INFO("Sending the following command: %f",controller_cmd_);
-        cmd_pub_.publish(controller_cmd_msg_);
+
+        if (dt >= command_update_rate_){
+            
+            // compute cmd 
+            controller_cmd_ = compute_command(error_cart, error_pend, dt);
+            controller_cmd_msg_.data = controller_cmd_;
+
+            // publish cmd
+            cmd_pub_.publish(controller_cmd_msg_);
+            last_command_update_time_  = ros::Time::now();
+        }
+
+        
+        if ((current_time - last_command_print_time_) >= command_print_rate_){ 
+            ROS_INFO("Sending the following command: %f",controller_cmd_);
+            last_command_print_time_ = ros::Time::now();
+        }
+
+        
 
     }
 
@@ -175,7 +202,7 @@ int main(int argc, char** argv){
 
     ros::init(argc,argv,"controller_node");
 
-    InvPenController inv_pend_controller(1,1,1,1,1,1);
+    InvPenController inv_pend_controller(1,1,1,1,1,1,0.1);
 
     while (ros::ok()){
         ros::spinOnce();
