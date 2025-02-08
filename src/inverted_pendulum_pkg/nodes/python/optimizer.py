@@ -14,44 +14,27 @@ import pdb
 from inverted_pendulum_pkg_py.gains_saver import GainsSaver
 
 
-# create a GainsSaver instance
-gains_saver = GainsSaver()
+# create a GainsSaver instance 
+gain_saver = GainsSaver() # will save the gain in ~/.ros/controller_gains
 
 
 # helper function
-def sum_custom(vals):
-    sum = 0
-    for x in vals:
-        if isinstance(x,tuple):
-            sum += x[0]
-        else:
-            sum += x
-    return sum
-
 def mean_vec(vals):
     num_elements = len(vals)
-    return sum_custom(vals) / num_elements # E[x]
+    return sum(vals) / num_elements # E[x]
     
 def std_vec(vals):
     num_elements = len(vals)
-    mean = sum_custom(vals) / num_elements
-
-    sum_squared_diff = 0
-    for x in vals:
-        if isinstance(x,tuple):
-            sum_squared_diff += (x[0] - mean) ** 2
-        else:
-            sum_squared_diff += (x - mean) ** 2
-
+    mean = sum(vals) / num_elements
+    sum_squared_diff = sum((x - mean) ** 2 for x in vals)
     return (sum_squared_diff / num_elements) ** 0.5
-
 
 # class to handle service call failure 
 class ServiceCallFailure(Exception):
     pass
 
 # create the objective class
-creator.create("TrackingError",base.Fitness,weights=(-1.0,)) #FIXME:
+creator.create("TrackingError",base.Fitness,weights=(-1.0,-1.0))
 
 # create the individual (controller) class
 creator.create("Controller",list,fitness=creator.TrackingError)
@@ -66,7 +49,7 @@ toolbox.register("population",tools.initRepeat,list,toolbox.controller)
 # in here, the compute objective client has to call the server with the controller gains
 def evaluate_controller(controller):
     srv_msg=CandidateSolutionRequest()
-    srv_msg.cart_controller_gains= [0,0,0] # controller[:3] FIXME: 
+    srv_msg.cart_controller_gains=controller[:3] 
     srv_msg.pendulum_controller_gains=controller[3:]
     rospy.loginfo("Sending {} controller gains...".format(controller[:]))
 
@@ -81,7 +64,7 @@ def evaluate_controller(controller):
             resp=obj_client.call(srv_msg)
 
             if resp:
-                return resp.loss_pend # resp.loss_cart FIXME:
+                return resp.loss_pend, resp.loss_cart
             else:
                 raise ServiceCallFailure("Service was called but return false success flag")
         
@@ -91,7 +74,7 @@ def evaluate_controller(controller):
             rospy.logwarn(rospy.logwarn(f"Service call failed (attempt {retry_count}/{max_retries}): {e}"))
             
     rospy.logwarn(f"Retunring large valaues for the objective since the call to the compute_objective failed {max_retries} times.")
-    return 1e6 # 1e6 FIXME:
+    return 1e6, 1e6
 
 
 #define the opertors 
@@ -123,15 +106,15 @@ if __name__ == "__main__":
 
 
 
-    NGEN=30
+    NGEN=100
     CXPB=0.6
     MUTPB=0.5
 
-    pop=toolbox.population(100)
+    pop=toolbox.population(10)
     pop_fitness=list(map(toolbox.evaluate,pop))
     # pdb.set_trace() # FIXME: 
     for ind,fit in zip(pop,pop_fitness):
-        ind.fitness.values=[fit]
+        ind.fitness.values=fit
 
     for g in range(NGEN):
         rospy.loginfo("Generation (%d)",g)
@@ -156,51 +139,47 @@ if __name__ == "__main__":
         new_controllers = [ind for ind in offspring if not ind.fitness.valid]
         new_offspring_fitness = list(map(toolbox.evaluate, new_controllers))
         for new_controller, fitness in zip(new_controllers, new_offspring_fitness):
-            new_controller.fitness.values = [fitness]
+            new_controller.fitness.values = fitness
 
         # Replace the old population with the new offspring
         pop[:] = offspring
 
         new_population_fitness_value = [ind.fitness.values for ind in pop] # FIXME: for some reason the previous code was indexing the first element of the fitness value ind.fitness.values[0]
         pop_size = len(pop)
-        min_cost_pend = min(new_population_fitness_value)
-        max_cost_pend = max(new_population_fitness_value)
-        mean_cost_pend = mean_vec(new_population_fitness_value)
-        std_cost_pend = std_vec(new_population_fitness_value)
+        min_cost_pend, min_cost_cart = map(min, zip(*new_population_fitness_value))
+        max_cost_pend, max_cost_cart = map(max, zip(*new_population_fitness_value))
+        mean_cost_pend, mean_cost_cart = map(mean_vec, zip(*new_population_fitness_value))
+        std_cost_pend, std_cost_cart = map(std_vec, zip(*new_population_fitness_value))
+        
 
-
-        print(f"  Min (pend, cart): {min_cost_pend}")
-        print(f"  Max (pend, cart): {max_cost_pend}")
-        print(f"  Avg (pend, cart): {mean_cost_pend}")
-        print(f"  Std (pend, cart): {std_cost_pend}")
+        print(f"  Min (pend, cart): {min_cost_pend}, {min_cost_cart}")
+        print(f"  Max (pend, cart): {max_cost_pend}, {max_cost_cart}")
+        print(f"  Avg (pend, cart): {mean_cost_pend}, {mean_cost_cart}")
+        print(f"  Std (pend, cart): {std_cost_pend}, {std_cost_cart}")
 
         # examine the fittest controller 
-        # best_controller_idx = np.argmin([pend_loss + cart_loss for pend_loss ,cart_loss in new_population_fitness_value])
-        # best_controller = pop[best_controller_idx]
+        best_controller_idx = np.argmin([pend_loss + cart_loss for pend_loss ,cart_loss in new_population_fitness_value])
+        best_controller = pop[best_controller_idx]
 
-        # # get the loss associated with best controller 
-        # loss = new_population_fitness_value[best_controller_idx]
-        # rospy.loginfo(f"The best loss is {loss}")
+        # get the loss associated with best controller 
+        loss = new_population_fitness_value[best_controller_idx]
+        rospy.loginfo(f"The best loss is {loss}")
         
-        # # publish the controller info 
-        # controller_info_msg = ControllerGains()
-        # controller_info_msg.controller_name = "cart"
-        # controller_info_msg.gains = best_controller[:3]
-        # cart_controller_gains_publisher.publish(controller_info_msg)
+        # publish the controller info 
+        controller_info_msg = ControllerGains()
+        controller_info_msg.controller_name = "cart"
+        controller_info_msg.gains = best_controller[:3]
+        cart_controller_gains_publisher.publish(controller_info_msg)
 
-        # controller_info_msg.controller_name = "pendulum"
-        # controller_info_msg.gains = best_controller[3:]
-        # pend_controller_gains_publisher.publish(controller_info_msg)
-        
-
+        controller_info_msg.controller_name = "pendulum"
+        controller_info_msg.gains = best_controller[3:]
+        pend_controller_gains_publisher.publish(controller_info_msg)
         
 
-        # pend_error_publisher.publish()
+        
 
-       # choosing the best individual
-    best_ind = tools.selBest(pop, 1)[0]
-    print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
-    gains_saver.save_gains(best_ind, best_ind.fitness.values)
+        pend_error_publisher.publish()
+
 
 
     
