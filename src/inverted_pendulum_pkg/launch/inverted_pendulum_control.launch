@@ -1,12 +1,27 @@
 <launch>
     <!--load the controller config file to rosparam server-->
-    <rosparam file="$(find inverted_pendulum_pkg)/config/inverted_pendulum_control.yaml" command="load" />
+    <rosparam file="$(find inverted_pendulum_pkg)/config/inverted_pendulum_control.yaml" command="load" />  
+    
+    <arg name="accelerate_flag" default="false" />
 
     <!--launch gazebo empty_world-->
-    <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
+    <group if="$(arg accelerate_flag)">  <!--speed up the simulation-->
+        <include file="$(find inverted_pendulum_pkg)/launch/custom_world.launch">
+        <arg name="use_sim_time" value="true"/>
+        <arg name="paused" value="true" />
+        <arg name="gui" value="false" />
+    </include>
+    </group>
+
+    <group unless="$(arg accelerate_flag)"> <!--run simulation normally-->
+        <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
         <arg name="use_sim_time" value="true"/>
         <arg name="paused" value="true" />
     </include>
+    </group>
+
+
+   
 
     <!--spwan the inverted_pendulum robot-->
     <include file="$(find inverted_pendulum_pkg)/launch/spawn.launch" />

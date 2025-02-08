@@ -54,9 +54,7 @@ public:
         get_link_state_client_ = nh_.serviceClient<gazebo_msgs::GetLinkState>("gazebo/get_link_state",false);
         my_custom_publisher_ = nh_.advertise<inverted_pendulum_pkg::ControlPoseData>("inverted_pendulum/control_pose_data",10,false);
         init_srv_msg();
-        ROS_INFO("UpdatePendulumPose object has been created!");
-    
-    
+        ROS_INFO("UpdatePendulumPose object has been created!"); 
     
     }
 

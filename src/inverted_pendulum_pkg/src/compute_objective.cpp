@@ -107,6 +107,7 @@ public:
     }   
 
     bool wait_for_servers(){
+        
 
         ROS_INFO("Waiting for the clients to connect ...");
 
@@ -276,21 +277,25 @@ protected:
 
     void joint_state_CB(const inverted_pendulum_pkg::ControlPoseDataConstPtr& msg){
         
-        ROS_INFO("This is the callback ...");
+        // ROS_INFO("This is the callback ...");
         double pend_pos = msg->pendulum_yaw;
         double cart_pos = msg->cart_posx;
         current_time_ = ros::Time::now();
         ros::Duration t_span = current_time_ - last_time_;
-        ROS_INFO("del time is %f",t_span.toSec());
+        // ROS_INFO("del time is %f",t_span.toSec());
 
         if ((current_time_ - last_time_) > accum_error_time_span_) {
             ROS_INFO("Accumalating error...");
-            accum_track_error_pend_ += std::abs(static_cast<double>(desired_pend_pos_) - pend_pos) * 
-                                        static_cast<double>(current_time_.toNSec()); // I made the cost grow with time
+            accum_track_error_pend_ += 4 * std::abs(static_cast<double>(desired_pend_pos_) - pend_pos)  * 1.0; // FIXEM: I temporarily scaled the pendulum error by four to add more cost
+                                        // static_cast<double>(current_time_.toNSec()); // I made the cost grow with time
 
-            accum_track_error_cart_ += std::abs(static_cast<double>(desired_cart_pos_) - cart_pos) * 
-                                        static_cast<double>(current_time_.toNSec());
-
+            accum_track_error_cart_ += std::abs(static_cast<double>(desired_cart_pos_) - cart_pos) * 1.0;
+                                        // static_cast<double>(current_time_.toNSec());
+            
+            // print the error to the console for debugging 
+            ROS_INFO("pend error: %f", accum_track_error_pend_);
+            ROS_INFO("cart error: %f", accum_track_error_cart_);
+            
             last_time_ = current_time_;
         }
 

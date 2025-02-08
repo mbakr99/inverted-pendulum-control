@@ -47,14 +47,13 @@ protected:
 
 public:
 
-    InvPenController(double pc,double ic,double dc,
-                     double pp,double ip,double dp,
+    InvPenController(std::vector<double>& cart_gains, std::vector<double>& pend_gains, 
                      double update_rate) :
                      pend_pos_controller_(),
                      cart_pos_controller_(),
                      last_command_print_time_(ros::Time::now()),
                      last_command_update_time_(ros::Time::now()),
-                     command_print_rate_(ros::Duration(0.2)),
+                     command_print_rate_(0.2),
                      command_update_rate_(update_rate)
                      {
     
@@ -64,7 +63,10 @@ public:
         cmd_pub_ = nh_.advertise<std_msgs::Float64>("/inverted_pendulum/joint_cart_controller/command",1,false);
         const boost::function<bool(inverted_pendulum_pkg::UpdatePIDParams::Request&, inverted_pendulum_pkg::UpdatePIDParams::Response&)> _f = boost::bind(&InvPenController::serviceCB,this,_1,_2);
         set_gains_server_ = nh_.advertiseService("/inverted_pendulum/set_pid_gains",_f);
-    }
+
+        // set the pid gains 
+        set_gains(cart_gains, pend_gains);
+    }   
 
 
 
@@ -72,9 +74,13 @@ protected:
 
 
     double compute_command(double error_cart,double error_pend, ros::Duration dt) {
-    
-      return (cart_pos_controller_.computeCommand(error_cart, dt) -
-            pend_pos_controller_.computeCommand(error_pend, dt)); 
+        
+        double action_cart = cart_pos_controller_.computeCommand(error_cart, dt);
+        double action_pend = pend_pos_controller_.computeCommand(error_pend, dt);
+
+        ROS_INFO("[InvPenController/compute_command: dt: %f]", dt.toSec());
+        ROS_INFO("[InvPenController/compute_command: action_cart: %f, action_pend: %f]", action_cart, action_pend);
+        return (1.0 * action_cart - action_pend); 
     
     }
 
@@ -85,7 +91,7 @@ protected:
 
 //   setGains(gains);
 // }
-    void set_gains(std::vector<double>& pend_cont_gains, std::vector<double>& cart_cont_gains ){
+    void set_gains(std::vector<double>& cart_cont_gains, std::vector<double>& pend_cont_gains ){
     
         //My implementation does not take into account i_max and i_min from the control_toolbox library 
         pp_ = pend_cont_gains[0];
@@ -132,17 +138,28 @@ protected: //all of the class callbacks
 
         ros::Time current_time = ros::Time::now();
         
-       
+        ROS_INFO("InvPenController/joint_state_CB: this is the callbask where the action command is computed.");
 
         //I might want to add a line here to control the update rate (use if condition with )
-        ros::Duration dt = current_time - last_command_print_time_;
-        
+        ros::Duration dt = current_time - last_command_update_time_;
 
+        if (last_command_update_time_.isZero() || dt.toSec() < 0) {
+            ROS_WARN_THROTTLE(1.0, "Invalid dt detected (%f), resetting last command time", dt.toSec());
+            last_command_update_time_ = current_time;
+            return;
+        }
+        
+        ROS_INFO("InvPenController/joint_state_CB: dt: %f", dt.toSec());
+        
         if (dt >= command_update_rate_){
             
+
+            ROS_INFO("cart_error: %f, pend_error: %f", error_cart, error_pend);
             // compute cmd 
             controller_cmd_ = compute_command(error_cart, error_pend, dt);
             controller_cmd_msg_.data = controller_cmd_;
+
+            ROS_INFO("computed command using ros::pid class: %f", controller_cmd_);
 
             // publish cmd
             cmd_pub_.publish(controller_cmd_msg_);
@@ -176,7 +193,7 @@ protected: //all of the class callbacks
         
         //ROS_INFO("Calling my set_gains method");
 
-        set_gains(pend_cont_gains_, cart_cont_gains_);
+        set_gains(cart_cont_gains_, pend_cont_gains_);
 
         resp.success = true;
 
@@ -200,9 +217,13 @@ protected: //all of the class callbacks
 
 int main(int argc, char** argv){
 
+    // init node
     ros::init(argc,argv,"controller_node");
 
-    InvPenController inv_pend_controller(1,1,1,1,1,1,0.1);
+    // set controller 
+    std::vector<double> cart_gains = {1.0,1.0,1.0};
+    std::vector<double> pend_gains = {1.0,1.0,1.0};
+    InvPenController inv_pend_controller(cart_gains, pend_gains, 0.1);
 
     while (ros::ok()){
         ros::spinOnce();
