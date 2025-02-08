@@ -11,6 +11,11 @@ from std_msgs.msg import Float64
 from inverted_pendulum_pkg.srv import CandidateSolution, CandidateSolutionRequest, CandidateSolutionResponse
 from inverted_pendulum_pkg.msg import ControllerGains 
 import pdb
+from inverted_pendulum_pkg_py.gains_saver import GainsSaver
+
+
+# create a GainsSaver instance
+gains_saver = GainsSaver()
 
 
 # helper function
@@ -195,6 +200,7 @@ if __name__ == "__main__":
        # choosing the best individual
     best_ind = tools.selBest(pop, 1)[0]
     print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
+    gains_saver.save_gains(best_ind, best_ind.fitness.values)
 
 
     

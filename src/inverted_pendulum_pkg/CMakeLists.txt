@@ -135,9 +135,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(objective_server src/compute_objective.cpp)
-add_executable(controller src/control_cart_pendulum.cpp)
-add_executable(update_pose_data src/update_pend_pose.cpp)
+add_executable(objective_server nodes/cpp/compute_objective.cpp)
+add_executable(controller nodes/cpp/control_cart_pendulum.cpp)
+add_executable(update_pose_data nodes/cpp/update_pend_pose.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -173,7 +173,7 @@ target_link_libraries(update_pose_data
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/optimizer.py
+  nodes/python/optimizer.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
