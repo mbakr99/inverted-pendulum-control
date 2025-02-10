@@ -7,24 +7,20 @@
     <!--launch gazebo empty_world-->
     <group if="$(arg accelerate_flag)">  <!--speed up the simulation-->
         <include file="$(find inverted_pendulum_pkg)/launch/custom_world.launch">
-        <arg name="use_sim_time" value="true"/>
-        <arg name="paused" value="true" />
-        <arg name="gui" value="false" />
-    </include>
+            <arg name="use_sim_time" value="true"/>
+            <arg name="paused" value="true" />
+            <arg name="gui" value="false" />
+        </include>
     </group>
 
     <group unless="$(arg accelerate_flag)"> <!--run simulation normally-->
         <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
-        <arg name="use_sim_time" value="true"/>
-        <arg name="paused" value="true" />
-    </include>
+            <arg name="use_sim_time" value="true"/>
+            <arg name="paused" value="true" />
+        </include>
     </group>
 
 
-   
-
-    <!--spwan the inverted_pendulum robot-->
-    <include file="$(find inverted_pendulum_pkg)/launch/spawn.launch" />
 
     <!--start the control_manager node-->
     <node  name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
