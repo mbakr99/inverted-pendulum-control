@@ -15,27 +15,25 @@ class UpdatePendulumPose{
 
 private:
 
-    //Declaring subscribers, publoshers, and clients
+    // Declaring subscribers, publoshers, and clients
     ros::NodeHandle nh_;
     ros::Subscriber link_states_sub_;
     ros::Publisher my_custom_publisher_;
     ros::ServiceClient get_link_state_client_;
 
-
-
-    //Auxilary data needed when listening to link_states topic
+    // Auxilary data needed when listening to link_states topic
     std::vector<std::string> link_names_;
-    const std::string cart_link_name_ = "inverted_pendulum::link_cart";
+    const std::string cart_link_name_ = "cart_pole::cart_link";
+    const std::string pend_link_name_ = "cart_pole::pole_link";
     
-
-    //Variables to store yaw and cart x position data
+    // Variables to store yaw and cart x position data
+    double current_yaw_rate;
     double current_yaw_;
     double current_cart_posx_;
 
-    //Auxilary data needed to call the get_link_state service 
-    const std::string pend_link_name_ = "link_pendulum";
-    const std::string pend_ref_link_name_ = "link_cart";
-    gazebo_msgs::GetLinkState srv_msg_;
+    // Yaw integration variables 
+    ros::Duration yaw_update_time;
+    ros::Time last_time;
 
 
     //Auxilary data to publish the custom msg that contains only the pendulum yaw and cart pos (This can be modified later to include other things if needed)
@@ -48,71 +46,64 @@ private:
 
 public:
 
-    UpdatePendulumPose() {
-     
+    UpdatePendulumPose() : last_time(ros::Time::now()), yaw_update_time(ros::Duration(0.05)),
+                           current_yaw_(0), current_yaw_rate(0), current_cart_posx_(0)
+    {
         link_states_sub_ = nh_.subscribe("gazebo/link_states",10,&UpdatePendulumPose::subCB,this);
-        get_link_state_client_ = nh_.serviceClient<gazebo_msgs::GetLinkState>("gazebo/get_link_state",false);
         my_custom_publisher_ = nh_.advertise<inverted_pendulum_pkg::ControlPoseData>("inverted_pendulum/control_pose_data",10,false);
-        init_srv_msg();
         ROS_INFO("UpdatePendulumPose object has been created!"); 
-    
     }
-
- 
 
 private:
 
 
-    void init_srv_msg(){
-    
-        srv_msg_.request.link_name = pend_link_name_;
-        srv_msg_.request.reference_frame = pend_ref_link_name_;
-
-    
-    }
-
-
     void subCB(const gazebo_msgs::LinkStatesConstPtr& msg){
-    
-        //Get cart position data 
+        // Get cart position data 
         link_names_ = msg->name;
 
         int index = -1;
-
-        for (int i = 0; i < link_names_.size(); i++){
-        
-            if (link_names_[i]==cart_link_name_)
+        for (int i = 0; i < link_names_.size(); ++i){
+            if (link_names_[i] == cart_link_name_){
                 index = i;
+                break;
+            }
         }
 
-
-        current_cart_posx_ = msg->pose[index].position.x;
+        current_cart_posx_ = msg->pose[index].position.x; // store x cart position
 
         //Get the pole yaw by calling the get link
-        if (get_link_state_client_.call(srv_msg_)){
-        
-            //ROS_INFO("Called the get_link_state service succesfully!");
-            current_yaw_ = srv_msg_.response.link_state.pose.orientation.y;
-        }
-        else {
-            ROS_INFO("Failed to call the get_link_state service and obtain the yaw ");
-            current_yaw_ = -1;
+        index = -1;
+        for (int i = 0; i < link_names_.size(); ++i){
+            if (link_names_[i] == pend_link_name_){
+                index = i;
+                break;
+            }
         }
 
+        // integrate yaw rate
+        current_yaw_rate = msg->twist[index].angular.y; 
+        ros::Time current_time = ros::Time::now();
+        ros::Duration dt = current_time - last_time;
+
+        if (last_time.isZero() || dt.toSec() < 0) {
+            ROS_WARN_THROTTLE(1.0, "Invalid dt detected (%f), resetting last command time", dt.toSec());
+            last_time = current_time;
+            return;
+        }
+
+        if (dt >= yaw_update_time){
+            current_yaw_ += current_yaw_rate * dt.toSec();
+            last_time = current_time;
+        }
+
+
+        
+        // publish pose data 
         my_custom_msg_.pendulum_yaw = current_yaw_;
         my_custom_msg_.cart_posx = current_cart_posx_;
-
-
-
         my_custom_publisher_.publish(my_custom_msg_);
-
-
-        
-    
-    
+   
     }
-
-
 
 
 };

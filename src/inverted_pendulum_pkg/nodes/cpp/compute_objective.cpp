@@ -136,27 +136,21 @@ public:
             ROS_INFO("setgains client connected ...");
 
         return (reset_connect && pause_connect && unpause_connect && applywrench_connect && setgains_connect); 
-
-    
     
     }
 
 protected:
 
     void set_app_body_wrench_msg(){
-    
         app_body_wrench_msg_.request.body_name = pendulum_link_name_;
         app_body_wrench_msg_.request.start_time = ros::Time::now() + ros::Duration(0.2);
         app_body_wrench_msg_.request.duration = ros::Duration(0.1); // I set this value after trial and error
         app_body_wrench_msg_.request.wrench.torque.y = 1.0;
-    
     }
 
     void reset_accum_error(){
-
         accum_track_error_pend_ = 0;
         accum_track_error_cart_ = 0;
-    
     }
 
     bool srvCB(inverted_pendulum_pkg::CandidateSolutionRequest& req,
@@ -171,12 +165,11 @@ protected:
 
         ROS_INFO("The recieved pid gains are: (pendulum): %f, %f, %f | (cart):, %f, %f, %f"
                 ,pend_cont_gains[0],pend_cont_gains[1],pend_cont_gains[2],
-                cart_cont_gains[0],cart_cont_gains[1],cart_cont_gains[2]);
+                 cart_cont_gains[0],cart_cont_gains[1],cart_cont_gains[2]);
         set_update_pid_msg(pend_cont_gains ,cart_cont_gains);
         
         //send the reconfig service to the server
         if (controller_setgains_client_.call(update_pid_srv_)){  //
-        
             ROS_INFO("The gains were set to the updated values!");
 
         }
@@ -213,14 +206,6 @@ protected:
             return false;
         }
 
-        // ROS_INFO("Sleeping for 2 seconds");
-        // // ros::WallDuration(2).sleep();
-        // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        // ROS_INFO("A message to check the sleep");
-        
-
-
-       
 
         if (success_flag){  //FIXME: I believe this is poitless as the flag is always true //if the simulation has been reset and the PID has been updated, run the simulation 
            
@@ -231,15 +216,9 @@ protected:
             //this controls the tracking error accumulation rate
             last_time_ = sim_start_time;
 
-
             while((current_time - sim_start_time) < simulation_time_){
-            
-
                 current_time = ros::Time::now();
                 ros::spinOnce();
-            
-            
-            
             }
 
         ros::Duration temp = current_time - sim_start_time;    
@@ -250,16 +229,8 @@ protected:
         
         }
 
-        
-
-        // ROS_INFO("Pausing the simulation for the next run..");
-        // if (gazebo_pause_client_.call(empty_srv_))
-        //     ROS_INFO("Pausing the simulation was succesful!");
-        
-        
         return success_flag;
 
-    
     
     }
     
