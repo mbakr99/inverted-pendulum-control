@@ -1,0 +1,3 @@
+<launch>
+    <node name="tunning_controller_node" type="tunning_controller" pkg="inverted_pendulum_pkg" output="screen" />
+</launch>
