@@ -1,0 +1,4 @@
+<launch>
+    <arg name="argument" default="none" />
+    <node name="$(anon debug)" type="test.py" pkg="inverted_pendulum_pkg" output="screen" args= "$(arg argument)"/>
+</launch>
