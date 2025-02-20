@@ -58,7 +58,6 @@ add_message_files(
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
-  UpdatePIDParams.srv
   CandidateSolution.srv
 )
 
@@ -135,9 +134,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(objective_server nodes/cpp/compute_objective.cpp)
-add_executable(controller nodes/cpp/control_cart_pendulum.cpp)
-add_executable(update_pose_data nodes/cpp/update_pend_pose.cpp)
+add_executable(tunning_controller nodes/cpp/tune_cart_pendulum.cpp)
+add_executable(tuned_controller nodes/cpp/run_tuned_controller.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -148,21 +146,16 @@ add_executable(update_pose_data nodes/cpp/update_pend_pose.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(objective_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(update_pose_data ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(tunning_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(tuned_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(objective_server
+target_link_libraries(tunning_controller
   ${catkin_LIBRARIES}
 )
-target_link_libraries(controller
+target_link_libraries(tuned_controller
   ${catkin_LIBRARIES}
 )
-target_link_libraries(update_pose_data
-  ${catkin_LIBRARIES}
-)
-
 #############
 ## Install ##
 #############

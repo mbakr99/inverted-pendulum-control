@@ -1,4 +1,0 @@
-<launch>
-    <arg name="sim_time" default="10" />
-    <node name="compute_objective_node" type="objective_server" pkg="inverted_pendulum_pkg" output="screen" args="$(arg sim_time)"/>
-</launch>

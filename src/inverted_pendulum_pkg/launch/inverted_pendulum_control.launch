@@ -6,9 +6,9 @@
 
     <!--launch gazebo empty_world-->
     <group if="$(arg accelerate_flag)">  <!--speed up the simulation-->
-        <include file="$(find inverted_pendulum_pkg)/launch/custom_world.launch">
+        <include file="$(find inverted_pendulum_pkg)/launch/accelerated_world.launch">
             <arg name="use_sim_time" value="true"/>
-            <arg name="paused" value="true" />
+            <arg name="paused" value="false" />
             <arg name="gui" value="false" />
         </include>
     </group>
@@ -16,7 +16,7 @@
     <group unless="$(arg accelerate_flag)"> <!--run simulation normally-->
         <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
             <arg name="use_sim_time" value="true"/>
-            <arg name="paused" value="true" />
+            <arg name="paused" value="false" />
         </include>
     </group>
 

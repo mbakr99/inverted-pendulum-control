@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
-
-from numpy import random as random
+import random
+import datetime 
 import numpy as np
 from deap import base
 from deap import creator
@@ -34,19 +34,16 @@ class ServiceCallFailure(Exception):
     pass
 
 # create the objective class
-creator.create("TrackingError",base.Fitness,weights=(-1.0,-1.0))
-
-# create the individual (controller) class
-creator.create("Controller",list,fitness=creator.TrackingError)
-NUM_CONT_PARAMS=6 # 3 gains for the cart controller and 3 for the pendulum controller 
+creator.create("TrackingError", base.Fitness, weights=(-1.0,-1.0))
+creator.create("Controller", list, fitness=creator.TrackingError) 
+NUM_CONT_PARAMS=6 # cart -> 3, pole -> 3
 
 toolbox=base.Toolbox()
-toolbox.register("gains",np.random.uniform,low=0,high=20)
-toolbox.register("controller",tools.initRepeat,creator.Controller,toolbox.gains,n=NUM_CONT_PARAMS)
-# create a population of controllers
-toolbox.register("population",tools.initRepeat,list,toolbox.controller)
+toolbox.register("gains", random.uniform, 0, 20)
+toolbox.register("controller", tools.initRepeat, creator.Controller, toolbox.gains, n=NUM_CONT_PARAMS)
+toolbox.register("population",tools.initRepeat,list,toolbox.controller) # create a population of controllers
 
-# in here, the compute objective client has to call the server with the controller gains
+# objective definition 
 def evaluate_controller(controller):
     srv_msg=CandidateSolutionRequest()
     srv_msg.cart_controller_gains=controller[:3] 
@@ -59,9 +56,8 @@ def evaluate_controller(controller):
 
     while retry_count < max_retries:
         try:
-
             # call the service  
-            resp=obj_client.call(srv_msg)
+            resp = evaluate_controller_client.call(srv_msg)
 
             if resp:
                 return resp.loss_pend, resp.loss_cart
@@ -71,6 +67,7 @@ def evaluate_controller(controller):
         # handle exceptions 
         except (rospy.ServiceException, ServiceCallFailure) as e:
             retry_count += 1
+            rospy.sleep(0.5)
             rospy.logwarn(rospy.logwarn(f"Service call failed (attempt {retry_count}/{max_retries}): {e}"))
             
     rospy.logwarn(f"Retunring large valaues for the objective since the call to the compute_objective failed {max_retries} times.")
@@ -88,29 +85,31 @@ toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.2)
 if __name__ == "__main__":
 
     rospy.init_node("optimizer_node")
-    rospy.wait_for_service("inverted_pendulum/compute_objective")
+    rospy.wait_for_service("/evaluate_controller")
     rospy.loginfo("compute objective service is running")
     try:
-        obj_client=rospy.ServiceProxy("inverted_pendulum/compute_objective",CandidateSolution)
+        evaluate_controller_client = rospy.ServiceProxy('/evaluate_controller', CandidateSolution)
     except:
         rospy.logwarn("The clinet was not able to connect to the server")
 
-    pend_controller_gains_publisher = rospy.Publisher("/inverted_pendulum/pend_controller_gains", ControllerGains, queue_size=10)
-    cart_controller_gains_publisher = rospy.Publisher("/inverted_pendulum/cart_controller_gains", ControllerGains, queue_size=10) 
-
+    
     pend_error_publisher = rospy.Publisher("/inverted_pendulum/pend_error", Float64, queue_size=10)
     cart_error_publisher = rospy.Publisher("/inverted_pendulum/cart_error", Float64, queue_size=10)
 
         
 
 
+    random.seed(datetime.datetime.now())
 
+    NGEN=10
+    CXPB=0.5
+    MUTPB=0.3
+    
+    global_best_controller = None
+    global_best_loss = 1e6
+    combine_loss = lambda x, y: 0.3 * x + 0.7 * y
 
-    NGEN=100
-    CXPB=0.6
-    MUTPB=0.5
-
-    pop=toolbox.population(10)
+    pop=toolbox.population(60)
     pop_fitness=list(map(toolbox.evaluate,pop))
     # pdb.set_trace() # FIXME: 
     for ind,fit in zip(pop,pop_fitness):
@@ -160,25 +159,27 @@ if __name__ == "__main__":
         # examine the fittest controller 
         best_controller_idx = np.argmin([pend_loss + cart_loss for pend_loss ,cart_loss in new_population_fitness_value])
         best_controller = pop[best_controller_idx]
+        best_controller_loss =  combine_loss(*best_controller.fitness.values)  
+
+        if best_controller_loss < global_best_loss:
+            global_best_loss = best_controller_loss
+            global_best_controller = best_controller
+
 
         # get the loss associated with best controller 
         loss = new_population_fitness_value[best_controller_idx]
         rospy.loginfo(f"The best loss is {loss}")
         
         # publish the controller info 
-        controller_info_msg = ControllerGains()
-        controller_info_msg.controller_name = "cart"
-        controller_info_msg.gains = best_controller[:3]
-        cart_controller_gains_publisher.publish(controller_info_msg)
-
-        controller_info_msg.controller_name = "pendulum"
-        controller_info_msg.gains = best_controller[3:]
-        pend_controller_gains_publisher.publish(controller_info_msg)
         
 
         
 
-        pend_error_publisher.publish()
+        
+
+    print(f"Global best controller: {global_best_controller}")
+    print(f"Global best loss: {global_best_loss}")
+    gain_saver.save_gains(global_best_controller, global_best_loss)
 
 
 

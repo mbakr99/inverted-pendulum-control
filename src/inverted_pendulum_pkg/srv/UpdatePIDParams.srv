@@ -1,4 +1,0 @@
-float64[] pendulum_controller_gains
-float64[] cart_controller_gains
----
-bool success

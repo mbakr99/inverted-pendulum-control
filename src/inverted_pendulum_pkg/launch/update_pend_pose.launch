@@ -1,3 +1,0 @@
-<launch>
-    <node name="update_pend_pose_data" type="update_pose_data" pkg="inverted_pendulum_pkg" output="screen" />
-</launch>
