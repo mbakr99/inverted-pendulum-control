@@ -23,4 +23,10 @@
         the ns argument in the controller_spwaner node -->
     </node>
 
+    <!--start the tunning controller node-->
+    <node name="tunning_controller_node" type="tunning_controller" pkg="inverted_pendulum_pkg" output="screen" />
+
+    <!--start the optimizer node-->
+    <node name="optimization_node" type="optimizer.py" pkg="inverted_pendulum_pkg" output="screen" />
+
 </launch>
