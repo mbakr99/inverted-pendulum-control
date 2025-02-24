@@ -3,6 +3,7 @@
     <rosparam file="$(find inverted_pendulum_pkg)/config/inverted_pendulum_control.yaml" command="load" />  
     
     <arg name="accl_flag" default="false" />
+    <arg name="tune_flag" default="false" />
 
     <include file="$(find inverted_pendulum_pkg)/launch/world.launch">
         <arg name="use_sim_time" value="true"/>
@@ -23,10 +24,14 @@
         the ns argument in the controller_spwaner node -->
     </node>
 
-    <!--start the tunning controller node-->
-    <node name="tunning_controller_node" type="tunning_controller" pkg="inverted_pendulum_pkg" output="screen" />
+    <!--if tune_flag is true-->
+    <!--start the tunable controller node-->
+    <node name="tunning_controller_node" type="tunning_controller" pkg="inverted_pendulum_pkg" output="screen" if="$(arg tune_flag)" />
 
     <!--start the optimizer node-->
-    <node name="optimization_node" type="optimizer.py" pkg="inverted_pendulum_pkg" output="screen" />
+    <node name="optimization_node" type="optimizer.py" pkg="inverted_pendulum_pkg" output="screen" if="$(arg tune_flag)" />
+
+    <!--if tune_flag is false-->
+    <node name="tuned_controller_node" type="tuned_controller" pkg="inverted_pendulum_pkg" output="screen" unless="$(arg tune_flag)" />
 
 </launch>

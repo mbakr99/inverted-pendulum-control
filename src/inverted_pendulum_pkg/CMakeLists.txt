@@ -1,12 +1,18 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(inverted_pendulum_pkg)
 
+
+
+
+
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+set(Python3_EXECUTABLE "/usr/bin/python3")
+find_package(Python3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
@@ -14,7 +20,16 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   control_toolbox
 )
+find_package(yaml-cpp REQUIRED)
 
+# Check if yaml-cpp is found and print a message
+if(yaml-cpp_FOUND)
+  message(STATUS "Found yaml-cpp: ${YAML_CPP_VERSION}")
+  message(STATUS "Include: ${YAML_CPP_INCLUDE_DIR}")
+  message(STATUS "Library: ${YAML_CPP_LIBRARIES}")
+else()
+  message(FATAL_ERROR "yaml-cpp not found!")
+endif()
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -22,7 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -117,8 +132,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
@@ -135,7 +151,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(tunning_controller nodes/cpp/tune_cart_pendulum.cpp)
-add_executable(tuned_controller nodes/cpp/run_tuned_controller.cpp)
+add_executable(tuned_controller nodes/cpp/run_tuned_controller.cpp src/cpp/gains_loader.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -154,7 +170,10 @@ target_link_libraries(tunning_controller
   ${catkin_LIBRARIES}
 )
 target_link_libraries(tuned_controller
+  PUBLIC
   ${catkin_LIBRARIES}
+  PRIVATE 
+  ${YAML_CPP_LIBRARIES}
 )
 #############
 ## Install ##
@@ -170,7 +189,7 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 catkin_install_python(PROGRAMS
-  nodes/python/test.py
+  nodes/python/debug_roslaunch.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

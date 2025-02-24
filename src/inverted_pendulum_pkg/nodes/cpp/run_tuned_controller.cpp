@@ -1,12 +1,13 @@
-#include "ros/ros.h"
+#include "gazebo_msgs/LinkStates.h"
 #include "ros/callback_queue.h"
 #include "std_msgs/Float64.h"
-#include <vector>
 #include "std_srvs/Empty.h"
-#include "gazebo_msgs/LinkStates.h"
+#include "gains_loader.h"
+#include "ros/ros.h"
+#include <algorithm>
+#include <vector>
 #include <thread>
 #include <mutex>
-
 
 
 // Global variables 
@@ -59,6 +60,13 @@ void state_update_callback(const gazebo_msgs::LinkStatesConstPtr& state_msg){
 }
 
 
+void set_pid_gains(std::vector<float> cart_gains, 
+                   std::vector<float> pend_gains){
+    Kp_c = cart_gains[0], Ki_c = cart_gains[1], Kd_c = cart_gains[2];
+    Kp_p = pend_gains[0], Ki_p = pend_gains[1], Kd_p = pend_gains[2];
+
+    return;
+}
 
 int main(int argc, char** argv){
 
@@ -73,8 +81,6 @@ int main(int argc, char** argv){
     // set control variables
     double effort = 0, time_interval_val = 0.005;
     ros::Rate control_rate(1 / time_interval_val);
-    Kp_c = 00, Ki_c = 06.18, Kd_c = 5.50;
-    Kp_p = 18, Ki_p = 19.34, Kd_p = 7.75;
     std_msgs::Float64 effort_msg;
     
     // yaw variables 
@@ -85,6 +91,18 @@ int main(int argc, char** argv){
     // position varibales 
     double target_pos = 0, pos_error = 0, last_pos_error = 0;
     double integral_pos_error = 0, effort_pos = 0; 
+
+    // set the tuned pid gains 
+    std::vector<float> best_cart_gains, best_pend_gains;
+    gainLoader gains_loader;
+    auto loader_result = gains_loader.get_latest_gains();
+    if (loader_result){ // split to cart and pendulum gains
+        auto best_gains = loader_result.value();
+        std::copy(best_gains.begin(), best_gains.begin() + 3, std::back_inserter(best_cart_gains)); 
+        std::copy(best_gains.begin() + 3, best_gains.end(), std::back_inserter(best_pend_gains)); 
+    }
+    set_pid_gains(best_cart_gains, best_pend_gains);
+
 
     // control loop
     while (ros::ok()){
