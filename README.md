@@ -37,34 +37,29 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 ### Nodes Overview
 
-#### 1. `update_pend_pose_data` Node
-- **Purpose**: Publishes the pendulum orientation and the cart position, which facilitates the exchange of relevant inverted pendulum data between Gazebo and ROS.
+#### 1. `tune_cart_pendulum` Node
+- **Purpose**: Tunes the controller of the cart-pole system.
 - **Functionality**:
-  - Collects relevant pendulum pose data by listening to the `/gazebo/link_states` topic and calling the `/gazebo/get_link_state` service.
+  - Collects relevant pendulum pose data by listening to the `/gazebo/link_states` topic and updating the system state accordingly.
+  - Uses mutex locks to ensure safe update/control behavior between the thread responsible for updating the system state and the one running the controller.
   - Publishes the data using a custom message of type `ControlPoseData` to the `/inverted_pendulum/control_pose_data` topic.
-- **Launch file**: `inverted_pendulum_pkg/launch/update_pend_pose.launch`.
+  - Provides a service `/inverted_pendulum/evaluate_controller` for evaluating a potential set of controller gains. The service uses a custom service of type `CandidateSolution`. The service returns the pendulum and cart tracking errors.
+  -  Runs a simulation in Gazebo for a specific amount of time (this can be set when launching the node using roslaunch by passing setting the argument `sim_time`).  
+- **Launch file**: `inverted_pendulum_pkg/launch/tunning_controller.launch`.
 
-#### 2. `controller_node` Node
-- **Purpose**: Computes the control action based on the current state of the inverted pendulum.
+#### 2. `tuned_controller` Node
+- **Purpose**: Computes the control action using the optimized gains based on the current state of the inverted pendulum.
 - **Functionality**:
-  - Provides a service `/inverted_pendulum/set_pid_gains` for changing PID gains. The service uses a custom service of type `UpdatePIDParams` that stores a set of controller gains.
-  - Computes the control action. The node subscribes to the `/inverted_pendulum/control_pose_data`topic to obtain the inverted pendulum state.
+  - Computes the control action. The node subscribes to the `/inverted_pendulum/link+states`topic to obtain the update pendulum state.
+  - Safe multithreading and fixed update and control rates are ensured.
   - Sends the control action to Gazebo by publishing to `/inverted_pendulum/joint_cart_controller/command` provided by `gazebo_ros_control` plugin.  
-- **Launch file**: `inverted_pendulum_pkg/launch/controller.launch`
+- **Launch file**: `inverted_pendulum_pkg/launch/tuned_controller.launch`
 
-#### 3. `compute_objective_node` Node
-- **Purpose**: Evaluate a set of controller gains.
-- **Functionality**:
-  - Provides a service `/inverted_pendulum/compute_objective` for evaluating a potential set of controller gains. The service uses a custom service of type `CandidateSolution`. The service returns the pendulum and cart tracking errors.  
-  - Contains a client to the `/inverted_pendulum/set_pid_gains`. The client parses the data stored in `CandidateSolution` into a `UpdatePIDParams` and sends it to the service server where the controller gains are updated.
-  - Runs a simulation in Gazebo for a specific amount of time (this can be set when launching the node using roslaunch by passing setting the argument `sim_time`). 
-  - Returns the tracking error at the end of the simulation, serving as an objective function that assesses the quality of the controller.
-- **Launch file**: `inverted_pendulum_pkg/launch/compute_objective_launch.launch`
 
 #### 4. `optimizer_node` Node
-- **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization.
+- **Purpose**: Implements the "learning from experience" process through Genetic Algorithm (GA) optimization through the deap python library.
 - **Functionality**:
-  - Contains a client to `/inverted_pendulum/compute_objective` for evaluating the population individuals.   
+  - Contains a client to `/inverted_pendulum/evaluate_controller` for evaluating the population individuals.   
   - Updates the population for a specific number of generations (the optimization parameters can only be changed by modifying the script `inverted_pendulum_pkg/scripts/optimizer.py`. This is going to be modified in the future. )
 - **Launch file**: `inverted_pendulum_pkg/launch/optimizer.launch`
 
@@ -72,52 +67,60 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 ### Directories breakdown
 **Note**: This section provides a breakdown of the project subdirectories and files. It might be skipped if the reader is not interested in the specifics of the project.
-#### 1. src directory
+#### 1. nodes directory
 
 | file | purpose |
 |-----------------|-----------------|
-| update_pend_pose.cpp     | source code of  `update_pend_pose_data` node    |
-| control_cart_pendulum.cpp    | source code of  `controller_node` node     |
-| compute_objective.cpp     |  source code of  `compute_objective_node` node    |
+| tune_cart_pendulum.cpp     | source code of  `tunning_controller` node    |
+| run_tuned_controller.cpp    | source code of  `controller_node` node     |
+| optimizer.py     |  source code of  `optimizer_node` node    |
 
-#### 2. scripts
+#### 2. src
 
 | file | purpose |
 |-----------------|-----------------|
-| optimizer.py     | source code of  `optimizer_node` node    |
+| gains_loader.cpp     | utility code to load the optimized gains of the controller    |
+| gains_saver.py     | utility code to save the optimized gains of the controller    |
 
-#### 3. launch
+#### 3. include
+
+| file | purpose |
+|-----------------|-----------------|
+| gains_loader.h     | header containing the decalration of the gains_loader utility code  (used for better code packaging)
+
+#### 4. launch
 
 | file | purpose |
 |-----------------|-----------------|
 | rviz.launch    | visualizes the inverted pendulum in Rviz   |
-| world.launch    | launches empty world in Gazebo. Other launch files use it     |
+| world.launch    | launches empty world in Gazebo. Other launch files use it. Enables accelerating the simulation (up to 4 times currently) through accl_flag|
 | spawn.launch     |  spawns the inverted pendulum model. Other launch files use it     |
-| inverted_pendulum_control.launch | launches empty world, spawns the inverted pendulum, and starts the controller_manager (part of gaebo_ros_control)  |
-| update_pend_pose.launch | launches the `update_pend_pose_data` node |
-| controller.launch |  launches the `controller_node` node |
-| compute_objective_launch.launch| launches the `compute_objective_node` node |
+| inverted_pendulum_control.launch | launches empty world, spawns the inverted pendulum, starts the controller_manager (part of gaebo_ros_control), and starts the tuning process |
+| tunning_controller.launch | launches the `tunning_controller` node |
+| tuned_controller.launch |  launches the `tuned_controller` node |
 | optimizer.launch | launches the  `optimizer_node`` node |
 
-#### 4. msg
+#### 5. msg
 | file | purpose |
 |-----------------|-----------------|
 | ControlPoseData.msg | Definition of the `ControlPoseData` type|
 
-#### 5. srv
+#### 6. srv
 | file | purpose |
 |-----------------|-----------------|
 | CandidateSolution.srv | Definition of the `CandidateSolution` type|
-| UpdatePIDParams.srv | Definition of the `UpdatePIDParams` type |
 
-#### 6. urdf
+
+#### 7. urdf
 | file | purpose |
 |-----------------|-----------------|
 | robot.urdf |  Robot description using urdf markup|
 | robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package for better code organization |
 | robot_properties.xacro | Contains definitions of gazebo materials, xacro macros, and other properties. This gets included in robot.xacro using `xacro:include` |
 
-#### 7. config
+__Note__: The current (updated package) uses the robot decription provided by "robomania" as it looks much better than the model I defined. This can be found in the robot_description that I attached along side my package for convenience. I intend to provide a more visually appealing model during future updates. However, I did not find that necessary at the moment.
+
+#### 8. config
 | file | purpose |
 |-----------------|-----------------|
 | inverted_pendulum_control.yaml |  Sets gazebo_ros_control interface through setting the joint_state_publisher and joint_cart_controller |
@@ -125,11 +128,12 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 
 **Note**: joint_cart_controller is of type `effort_controllers/JointEffortController`. For more details on this, refer to [ros_control](https://wiki.ros.org/ros_control) and this [tutorial](https://classic.gazebosim.org/tutorials?tut=ros_control). 
 
-#### 8. CMakeLists.txt
+#### 9. CMakeLists.txt
 
  This file defines the build process. It manages dependencies and enables building projects across different platforms. A few parts of the CMakeLists.txt file are highlighted and explained below:
 ##### bring dependencies into the build
 ```
+find_package(Python3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
@@ -137,7 +141,9 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   control_toolbox
 )
+find_package(yaml-cpp REQUIRED)
 
+catkin_python_setup()
 ```
 ##### generating custom messages and services
 ```
@@ -158,80 +164,90 @@ generate_messages(
 ```
 ##### generating executables from cpp source files
 ```
-add_executable(objective_server src/compute_objective.cpp)
-add_executable(controller src/control_cart_pendulum.cpp)
-add_executable(update_pose_data src/update_pend_pose.cpp)
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIR}
+)
+
+add_executable(tunning_controller nodes/cpp/tune_cart_pendulum.cpp)
+add_executable(tuned_controller nodes/cpp/run_tuned_controller.cpp src/cpp/gains_loader.cpp)
+
+add_dependencies(tunning_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(tuned_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ```
 ##### specifying libraries used for linking the targets (executables) to their dependencies
 ```
-target_link_libraries(objective_server
+target_link_libraries(tunning_controller
   ${catkin_LIBRARIES}
 )
-target_link_libraries(controller
+target_link_libraries(tuned_controller
+  PUBLIC
   ${catkin_LIBRARIES}
-)
-target_link_libraries(update_pose_data
-  ${catkin_LIBRARIES}
+  PRIVATE 
+  ${YAML_CPP_LIBRARIES}
 )
 ```
+
+##### Mark executable scripts (Python etc.) for installation
+```
+catkin_install_python(PROGRAMS
+  nodes/python/optimizer.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+catkin_install_python(PROGRAMS
+  nodes/python/debug_roslaunch.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+```
+
 #### 9. package.xml
 Provides meta-information about the package. It also provides high-level dependency management. Please refer to the [package.xml](inverted_pendulum_pkg/package.xml) file for more details.
 ## Using the package 
 #### Building the package 
-Add the package to the src directory of your workspace. Then, in a shell, execute the following:
+Clone the repo to your project folder
 ```
-roscd; cd ..
-catkin_make --only-pkg-with-deps inverted_pendulum_pkg
+git clone "https://github.com/mbakr99/inverted-pendulum-control.git"
+
+```
+#### Restructure the directory 
+
+Then, in a shell, execute the following:
+```
+mv inverted-pendulum-control/ catkin_ws/
+cd catkin_ws
+catkin_make
+
+```
+#### Apply the changes  
+
+Source the generated setup.bash file to reflect the new build:
+```
+source catkin_ws/devel/setup.bash
+
 ```
 #### Visualizing the inverted pendulum in Rviz
 
 ```
 roslaunch inverted_pendulum_pkg rviz.launch
+
 ```
-The following should appear:
-![Image](inverted_pendulum_pkg/images/rviz_ref_set.png)
 
 **Note**: At first, the model colors will not be set until a _Fixed frame_ link is set by going to the _Global options_ under the _Display_ panel.
 This command also launches the `joint_state_publisher_gui`, enabling the user to simulate joint movement.
 
-#### Starting Gazebo, spawning the model
+#### Tuning the model
 ```
-roslaunch inverted_pendulum_pkg rviz.launch
+roslaunch inverted_pendulum_pkg inverted_pendulum_control.launch tune_flag:=true accl_flag:=false
 
 ```
-The following should appear:
-![Image](inverted_pendulum_pkg/images/model_gazebo.png)
+
 
 This command starts Gazebo, spawns the model, and takes care of applying the control actions to the model. Due to using `gazebo_ros_control` [plugin](https://classic.gazebosim.org/tutorials?tut=ros_gzplugins) and launching the controller manager, the topic `/inverted_pendulum/joint_cart_controller/command` should appear after using `rostopic list`.
 
-**Note**: The simulation is paused by default. 
 
-#### Launching the `update_pend_pose_data` and `controller_node` nodes
-```
-roslaunch inverted_pendulum_pkg controller.launch
-```
 
-To ensure the node is up and running, you should see the `/inverted_pendulum/set_pid_gains` service when executing `rosservice list` in a shell. The controller is constantly computing control actions. At first, however, the inverted pendulum pose data should be available. Thus, to see the controller in action, the `update_pend_pose_data` node has to be running first. To do that, execute the following command
-```
-roslaunch inverted_pendulum_pkg update_pend_pose.launch
-```
-Now unpause the simulation by executing `rosservice call /gazebo/unpause`. You should see the pendulum falling. Now, the pendulum pose data can be obtained by executing `rostopic echo /inverted_pendulum/control_pose_data`.
-By default, the controller gains are set to zeros. However, this can be changed by calling the `/inverted_pendulum/set_pid_gains` service provided by the `controller_node` as follows
-```
-rosservice call /inverted_pendulum/set_pid_gains <TAB><TAB>
-```
-fill in the gains and execute the command. You should see the pendulum starting to move.
-
-#### Launching the `compute_pbjective_node` and `optimizer_node` nodes
-```
-roslaunch inverted_pendulum_pkg compute_objective_launch.launch sim_time:=3
-```
-In another shell
-
-```
-roslaunch inverted_pendulum_pkg optimizer.launch
-```
 At first, the controller struggles to keep the pendulum in the desired upright position while maintaining the cart at the center of the plate.  
 ![first_gen](inverted_pendulum_pkg/images/first_generations.gif)
 
