@@ -114,7 +114,7 @@ The implementation involves modeling an inverted pendulum in Gazebo, while a con
 | file | purpose |
 |-----------------|-----------------|
 | robot.urdf |  Robot description using urdf markup|
-| robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package to for better code organization |
+| robot.xacro | Robot description using urdf markup. Differs from robot.urdf by exploiting xacro (xml macros) package for better code organization |
 | robot_properties.xacro | Contains definitions of gazebo materials, xacro macros, and other properties. This gets included in robot.xacro using `xacro:include` |
 
 #### 7. config
@@ -182,7 +182,7 @@ Provides meta-information about the package. It also provides high-level depende
 Add the package to the src directory of your workspace. Then, in a shell, execute the following:
 ```
 roscd; cd ..
-catkin_makr --only-pkg-with-deps inverted_pendulum_pkg
+catkin_make --only-pkg-with-deps inverted_pendulum_pkg
 ```
 #### Visualizing the inverted pendulum in Rviz
 
@@ -240,7 +240,7 @@ At first, the controller struggles to keep the pendulum in the desired upright p
 ## Experience that will save you a lot of time :upside_down_face:
 
 - `joint_state_publisher` from `ros_control` , wich is responsible for publishing joint states, crashes when you reset the gazebo simulation. This is why I had to implement the `update_pend_pose_data` node that publishes the pose data.
-- The importance of logging in debugging your code. I can't emphaisze how important this is! By comparing the expected behavior (through login) with what you are actually getting you can determine or narrow down the possible sources of the :bug:.
+- The importance of logging in debugging your code. I can't emphaisze how important this is! By comparing the expected behavior (through logging) with what you are actually getting you can determine or narrow down the possible sources of the :bug:.
 - Using different logging levels to be able to filter different messages using `rqt_console`.
 - Save simulation time ⏱️ when possible! Don't think, "Oh, this costs almost no time; making it more efficient will not matter". It, generally, does. I saved a lot of time by doing the following:
   + Setting an initial tilt in the pendulum so that it falls more quickly (saved around 3-4 seconds),
